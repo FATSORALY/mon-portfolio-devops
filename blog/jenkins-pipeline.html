@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jenkins : Maîtrisez les pipelines CI/CD - Harivelo DevOps Blog</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  [data-theme="light"] {
+    --bg: #f8f7f4;
+    --bg2: #ffffff;
+    --bg3: #f0ede8;
+    --text: #1a1916;
+    --muted: #6b6760;
+    --accent: #2563eb;
+    --accent2: #0ea5e9;
+    --green: #16a34a;
+    --border: #e5e2dc;
+    --border2: #ccc9c2;
+    --shadow: rgba(0,0,0,0.06);
+    --tag-bg: #eff6ff;
+    --tag-txt: #1d4ed8;
+  }
+  [data-theme="dark"] {
+    --bg: #13131a;
+    --bg2: #1c1c26;
+    --bg3: #242430;
+    --text: #eeeef2;
+    --muted: #8888a0;
+    --accent: #60a5fa;
+    --accent2: #38bdf8;
+    --green: #4ade80;
+    --border: #2a2a38;
+    --border2: #3a3a50;
+    --shadow: rgba(0,0,0,0.3);
+    --tag-bg: #1e3a5f;
+    --tag-txt: #93c5fd;
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  nav {
+    position: fixed;
+    top:0; left:0; right:0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 5vw;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 1.75rem; list-style: none; }
+  .nav-links a { font-size:14px; font-weight:500; color:var(--muted); text-decoration:none; }
+  .nav-links a:hover { color:var(--text); }
+  .nav-right { display:flex; align-items:center; gap:2rem; }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 3px;
+    cursor: pointer;
+  }
+  .toggle-btn {
+    width:28px; height:28px;
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+    border:none; background:transparent;
+    color:var(--muted);
+    cursor: pointer;
+  }
+  .toggle-btn.active {
+    background: var(--bg2);
+    color: var(--text);
+  }
+
+  .blog-article {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 8rem 5vw 5rem;
+  }
+  .article-header {
+    margin-bottom: 3rem;
+  }
+  .article-category {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .article-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  .article-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+  .article-content {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--text);
+  }
+  .article-content h2 {
+    font-size: 1.8rem;
+    font-family: 'Instrument Serif', serif;
+    margin: 2rem 0 1rem;
+  }
+  .article-content h3 {
+    font-size: 1.3rem;
+    margin: 1.5rem 0 0.75rem;
+  }
+  .article-content pre {
+    background: var(--bg3);
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+  }
+  .article-content code {
+    background: var(--bg3);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9em;
+  }
+  .article-content p {
+    margin-bottom: 1.25rem;
+  }
+  .article-content ul, .article-content ol {
+    margin-left: 2rem;
+    margin-bottom: 1.25rem;
+  }
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+  }
+  .comparison-table th, .comparison-table td {
+    border: 1px solid var(--border);
+    padding: 12px;
+    text-align: left;
+  }
+  .comparison-table th {
+    background: var(--bg3);
+    font-weight: 600;
+  }
+  .back-to-blog {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 3rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  .back-to-blog:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    gap: 12px;
+  }
+  footer {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 5vw;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><a href="../index.html" style="text-decoration:none; color:inherit;">harivelo<span>.dev</span></a></div>
+  <div class="nav-right">
+    <ul class="nav-links">
+      <li><a href="../index.html#stack">Stack</a></li>
+      <li><a href="../index.html#projets">Projets</a></li>
+      <li><a href="../index.html#cv">Parcours</a></li>
+      <li><a href="../index.html#blog">Blog</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+    </ul>
+    <div class="theme-toggle">
+      <button class="toggle-btn active" id="btn-light" onclick="setTheme('light')">☀️</button>
+      <button class="toggle-btn" id="btn-dark" onclick="setTheme('dark')">🌙</button>
+    </div>
+  </div>
+</nav>
+
+<article class="blog-article">
+  <div class="article-header">
+    <div class="article-category">🔧 JENKINS · CI/CD</div>
+    <h1 class="article-title">Jenkins : Maîtrisez les pipelines CI/CD comme un pro</h1>
+    <div class="article-meta">📅 25 Mars 2026 • ⏱️ 15 min de lecture</div>
+  </div>
+  <div class="article-content">
+    <p>Jenkins est l'outil d'intégration continue le plus populaire au monde. Dans cet article, je vous guide pas à pas pour installer, configurer et créer des pipelines Jenkins professionnels, du job simple à la pipeline complète avec Docker et Kubernetes.</p>
+
+    <h2>Pourquoi Jenkins encore en 2026 ?</h2>
+    <p>Malgré l'arrivée de GitLab CI, GitHub Actions ou CircleCI, Jenkins reste incontournable car :</p>
+    <ul>
+      <li>✅ <strong>Gratuit et open-source</strong> (aucune limite de jobs ou de runners)</li>
+      <li>✅ <strong>Extrêmement personnalisable</strong> (plus de 1800 plugins)</li>
+      <li>✅ <strong>On-premise</strong> : vos données restent chez vous</li>
+      <li>✅ <strong>Communauté immense</strong> : solutions à tous les problèmes</li>
+    </ul>
+
+    <h2>Installation de Jenkins</h2>
+    <h3>Méthode 1 : Avec Docker (recommandée)</h3>
+    <pre><code># Créer un volume persistant
+docker volume create jenkins-data
+
+# Lancer Jenkins
+docker run -d \
+  --name jenkins \
+  -p 8080:8080 \
+  -p 50000:50000 \
+  -v jenkins-data:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  jenkins/jenkins:lts
+
+# Récupérer le mot de passe initial
+docker logs jenkins | grep -A 5 "Please use the following password"</code></pre>
+
+    <h3>Méthode 2 : Installation directe (Ubuntu/Debian)</h3>
+    <pre><code># Ajouter le dépôt Jenkins
+curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/ | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+# Installer Jenkins
+sudo apt update
+sudo apt install jenkins -y
+sudo systemctl start jenkins
+sudo systemctl enable jenkins
+
+# Accéder à http://localhost:8080
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword</code></pre>
+
+    <h2>Plugins essentiels à installer</h2>
+    <pre><code>Plugins recommandés :
+├── Docker Pipeline
+├── Kubernetes CI/CD
+├── Blue Ocean (interface moderne)
+├── Pipeline: AWS Steps
+├── SonarQube Scanner
+├── GitLab Integration
+├── Slack Notification
+└── OWASP Dependency-Check</code></pre>
+
+    <h2>Type 1 : Pipeline Déclarative (recommandée)</h2>
+    <pre><code>// Jenkinsfile
+pipeline {
+    agent any
+    
+    tools {
+        maven 'Maven-3.9'
+        jdk 'JDK-17'
+    }
+    
+    environment {
+        DOCKER_REGISTRY = 'monregistry.com'
+        DOCKER_IMAGE = "${DOCKER_REGISTRY}/${JOB_NAME}:${BUILD_NUMBER}"
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                sh 'mvn clean compile'
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+        
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build("${DOCKER_IMAGE}")
+                }
+            }
+        }
+        
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker-credentials') {
+                        docker.image("${DOCKER_IMAGE}").push()
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy to Staging') {
+            steps {
+                sh 'kubectl set image deployment/monapp monapp=${DOCKER_IMAGE} -n staging'
+            }
+        }
+        
+        stage('Integration Tests') {
+            steps {
+                sh 'npm run test:integration'
+            }
+        }
+    }
+    
+    post {
+        success {
+            emailext (
+                subject: "Pipeline réussi : ${JOB_NAME} - ${BUILD_NUMBER}",
+                body: "Le build ${BUILD_NUMBER} a été déployé avec succès.",
+                to: 'team@monentreprise.com'
+            )
+        }
+        failure {
+            emailext (
+                subject: "Pipeline échoué : ${JOB_NAME} - ${BUILD_NUMBER}",
+                body: "Le build ${BUILD_NUMBER} a échoué. Vérifiez les logs.",
+                to: 'team@monentreprise.com'
+            )
+        }
+    }
+}</code></pre>
+
+    <h2>Type 2 : Pipeline Scriptée (plus flexible)</h2>
+    <pre><code>// Jenkinsfile scripté
+node('docker') {
+    try {
+        stage('Checkout') {
+            checkout scm
+        }
+        
+        stage('Build & Test') {
+            sh '''
+                docker build -t monapp:latest .
+                docker run --rm monapp:latest npm test
+            '''
+        }
+        
+        stage('Security Scan') {
+            sh 'trivy image monapp:latest'
+        }
+        
+        stage('Push to Registry') {
+            withCredentials([string(credentialsId: 'docker-hub', variable: 'DOCKER_PASSWORD')]) {
+                sh '''
+                    docker tag monapp:latest monuser/monapp:${BUILD_NUMBER}
+                    docker login -u monuser -p ${DOCKER_PASSWORD}
+                    docker push monuser/monapp:${BUILD_NUMBER}
+                '''
+            }
+        }
+        
+        stage('Deploy') {
+            input message: 'Déployer en production ?', ok: 'Oui'
+            sh 'kubectl rollout status deployment/monapp'
+        }
+        
+    } catch (e) {
+        currentBuild.result = 'FAILURE'
+        throw e
+    } finally {
+        stage('Cleanup') {
+            sh 'docker system prune -f'
+        }
+    }
+}</code></pre>
+
+    <h2>Pipeline multi-branche avec Jenkinsfile</h2>
+    <pre><code>// Jenkinsfile pour gestion multi-environnements
+pipeline {
+    agent any
+    
+    stages {
+        stage('Build') {
+            steps {
+                sh 'npm ci'
+                sh 'npm run build'
+            }
+        }
+        
+        stage('Test') {
+            parallel {
+                stage('Unit Tests') {
+                    steps { sh 'npm run test:unit' }
+                }
+                stage('Lint') {
+                    steps { sh 'npm run lint' }
+                }
+                stage('Security') {
+                    steps { sh 'npm audit' }
+                }
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                script {
+                    switch(env.BRANCH_NAME) {
+                        case 'main':
+                            sh 'kubectl apply -f k8s/production/'
+                            break
+                        case 'develop':
+                            sh 'kubectl apply -f k8s/staging/'
+                            break
+                        default:
+                            sh 'echo "Pas de déploiement pour cette branche"'
+                    }
+                }
+            }
+        }
+    }
+}</code></pre>
+
+    <h2>Configuration des agents (workers) Jenkins</h2>
+    <h3>Agent Docker</h3>
+    <pre><code>pipeline {
+    agent {
+        docker {
+            image 'node:18-alpine'
+            args '-v /tmp:/tmp'
+        }
+    }
+    stages {
+        stage('Build') {
+            steps {
+                sh 'npm install'
+                sh 'npm run build'
+            }
+        }
+    }
+}</code></pre>
+
+    <h3>Agent Kubernetes (pods éphémères)</h3>
+    <pre><code>pipeline {
+    agent {
+        kubernetes {
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: docker
+    image: docker:24-dind
+    command: ["dockerd-entrypoint.sh"]
+    securityContext:
+      privileged: true
+  - name: kubectl
+    image: bitnami/kubectl:latest
+    command: ["cat"]
+'''
+        }
+    }
+    stages {
+        stage('Build & Deploy') {
+            steps {
+                container('docker') {
+                    sh 'docker build -t monapp .'
+                }
+                container('kubectl') {
+                    sh 'kubectl apply -f deployment.yaml'
+                }
+            }
+        }
+    }
+}</code></pre>
+
+    <h2>Intégration avec GitHub / GitLab</h2>
+    <pre><code>// Webhook configuration
+// Dans GitHub : Settings → Webhooks → Add webhook
+Payload URL: http://jenkins.mondomaine.com/github-webhook/
+Content type: application/json
+Events: Just the push event
+
+// Dans Jenkins
+// Pipeline script from SCM
+Git repository: https://github.com/monuser/monprojet.git
+Branches to build: */main, */develop
+Script Path: Jenkinsfile</code></pre>
+
+    <h2>Blue Ocean : L'interface moderne de Jenkins</h2>
+    <pre><code># Installation via Jenkins : 
+# Manage Jenkins → Plugins → Blue Ocean
+
+# Accès : http://localhost:8080/blue
+
+# Créer un pipeline visuellement :
+Blue Ocean → New Pipeline → GitHub → Sélectionner le dépôt → Create Pipeline</code></pre>
+
+    <h2>Bonnes pratiques Jenkins</h2>
+    <ul>
+      <li>✅ <strong>Utiliser Jenkinsfile</strong> : versionner vos pipelines (Pipeline as Code)</li>
+      <li>✅ <strong>Séparer les stages</strong> : Build, Test, Deploy bien distincts</li>
+      <li>✅ <strong>Nettoyer les workspaces</strong> : éviter de saturer le disque</li>
+      <li>✅ <strong>Utiliser des credentials</strong> : jamais de secrets en dur</li>
+      <li>✅ <strong>Backup régulier</strong> : sauvegarder /var/jenkins_home</li>
+      <li>✅ <strong>Limiter les droits</strong> : Matrix Authorization Strategy</li>
+    </ul>
+
+    <h2>Monitoring des pipelines</h2>
+    <pre><code>// Notifications Slack
+post {
+    success {
+        slackSend(
+            color: 'good',
+            message: "Pipeline réussi : ${JOB_NAME} - ${BUILD_NUMBER}",
+            channel: '#ci-cd'
+        )
+    }
+    failure {
+        slackSend(
+            color: 'danger',
+            message: "Pipeline échoué : ${JOB_NAME} - ${BUILD_NUMBER}\nLogs: ${BUILD_URL}",
+            channel: '#ci-cd'
+        )
+    }
+}</code></pre>
+
+    <h2>Dépannage des erreurs courantes</h2>
+    <table class="comparison-table">
+      <thead>
+        <tr><th>Erreur</th><th>Solution</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Permission denied (Docker)</td><td>Ajouter jenkins au groupe docker : <code>sudo usermod -aG docker jenkins</code></td></tr>
+        <tr><td>Out of memory</td><td>Augmenter la RAM : <code>JAVA_OPTS="-Xmx2048m"</code></td></tr>
+        <tr><td>Pipeline stuck</td><td>Vérifier les agents disponibles : <code>Manage Jenkins → Nodes</code></td></tr>
+        <tr><td>Plugin incompatibility</td><td>Utiliser les versions LTS des plugins</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Alternative : Jenkins avec Docker Compose</h2>
+    <pre><code># docker-compose.yml
+version: '3.8'
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+
+  jenkins-agent:
+    image: jenkins/ssh-agent:latest
+    container_name: jenkins-agent
+    environment:
+      - JENKINS_AGENT_SSH_PUBKEY=ssh-rsa AAAAB3...
+
+volumes:
+  jenkins-data:</code></pre>
+
+    <p>Avec Jenkins et ces pipelines, vous pouvez automatiser entièrement votre chaîne de livraison logicielle. Commencez simple avec un pipeline déclaratif, puis ajoutez progressivement des étapes de sécurité, de déploiement et de monitoring. L'avantage de Jenkins est qu'il peut s'adapter à tous vos cas d'usage, quels que soient vos outils ou votre infrastructure !</p>
+  </div>
+  <a href="../index.html#blog" class="back-to-blog">← Retour au blog</a>
+</article>
+
+<footer>
+  <span>© 2026 Harivelo Andrianantoandro — DevOps Engineer</span>
+</footer>
+
+<script>
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    document.getElementById('btn-light').classList.toggle('active', t === 'light');
+    document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+    localStorage.setItem('theme', t);
+  }
+
+  const saved = localStorage.getItem('theme');
+  if (saved) setTheme(saved);
+</script>
+</body>
+</html>

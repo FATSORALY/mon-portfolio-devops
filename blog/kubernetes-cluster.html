@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kubernetes : Premier cluster - Harivelo DevOps Blog</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Copiez TOUS les styles de votre index.html ici (même CSS) */
+  [data-theme="light"] {
+    --bg: #f8f7f4;
+    --bg2: #ffffff;
+    --bg3: #f0ede8;
+    --text: #1a1916;
+    --muted: #6b6760;
+    --accent: #2563eb;
+    --accent2: #0ea5e9;
+    --green: #16a34a;
+    --border: #e5e2dc;
+    --border2: #ccc9c2;
+    --shadow: rgba(0,0,0,0.06);
+    --tag-bg: #eff6ff;
+    --tag-txt: #1d4ed8;
+  }
+  [data-theme="dark"] {
+    --bg: #13131a;
+    --bg2: #1c1c26;
+    --bg3: #242430;
+    --text: #eeeef2;
+    --muted: #8888a0;
+    --accent: #60a5fa;
+    --accent2: #38bdf8;
+    --green: #4ade80;
+    --border: #2a2a38;
+    --border2: #3a3a50;
+    --shadow: rgba(0,0,0,0.3);
+    --tag-bg: #1e3a5f;
+    --tag-txt: #93c5fd;
+  }
+
+  /* Copiez tous les styles généraux ici (body, nav, btn, etc.) */
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  nav {
+    position: fixed;
+    top:0; left:0; right:0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 5vw;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 1.75rem; list-style: none; }
+  .nav-links a { font-size:14px; font-weight:500; color:var(--muted); text-decoration:none; }
+  .nav-links a:hover { color:var(--text); }
+  .nav-right { display:flex; align-items:center; gap:2rem; }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 3px;
+    cursor: pointer;
+  }
+  .toggle-btn {
+    width:28px; height:28px;
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+    border:none; background:transparent;
+    color:var(--muted);
+    cursor: pointer;
+  }
+  .toggle-btn.active {
+    background: var(--bg2);
+    color: var(--text);
+  }
+
+  .blog-article {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 8rem 5vw 5rem;
+  }
+  .article-header {
+    margin-bottom: 3rem;
+  }
+  .article-category {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .article-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  .article-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+  .article-content {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--text);
+  }
+  .article-content h2 {
+    font-size: 1.8rem;
+    font-family: 'Instrument Serif', serif;
+    margin: 2rem 0 1rem;
+  }
+  .article-content h3 {
+    font-size: 1.3rem;
+    margin: 1.5rem 0 0.75rem;
+  }
+  .article-content pre {
+    background: var(--bg3);
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+  }
+  .article-content code {
+    background: var(--bg3);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9em;
+  }
+  .article-content p {
+    margin-bottom: 1.25rem;
+  }
+  .back-to-blog {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 3rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  .back-to-blog:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    gap: 12px;
+  }
+  footer {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 5vw;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><a href="../index.html" style="text-decoration:none; color:inherit;">harivelo<span>.dev</span></a></div>
+  <div class="nav-right">
+    <ul class="nav-links">
+      <li><a href="../index.html#stack">Stack</a></li>
+      <li><a href="../index.html#projets">Projets</a></li>
+      <li><a href="../index.html#cv">Parcours</a></li>
+      <li><a href="../index.html#blog">Blog</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+    </ul>
+    <div class="theme-toggle">
+      <button class="toggle-btn active" id="btn-light" onclick="setTheme('light')">☀️</button>
+      <button class="toggle-btn" id="btn-dark" onclick="setTheme('dark')">🌙</button>
+    </div>
+  </div>
+</nav>
+
+<article class="blog-article">
+  <div class="article-header">
+    <div class="article-category">🟢 KUbernetes</div>
+    <h1 class="article-title">Comment j'ai déployé mon premier cluster Kubernetes from scratch</h1>
+    <div class="article-meta">📅 15 Mars 2026 • ⏱️ 8 min de lecture</div>
+  </div>
+  <div class="article-content">
+    <p>Kubernetes est devenu la référence en matière d'orchestration de conteneurs. Dans cet article, je vais vous partager mon expérience de déploiement d'un premier cluster Kubernetes sur des serveurs Ubuntu.</p>
+
+    <h2>Prérequis nécessaires</h2>
+    <p>Avant de commencer, assurez-vous d'avoir :</p>
+    <ul style="margin-left: 2rem; margin-bottom: 1rem;">
+      <li>Au moins 2 machines Ubuntu 22.04 (1 master + 1 worker)</li>
+      <li>2GB de RAM minimum par machine</li>
+      <li>Connexion internet pour télécharger les images Docker</li>
+    </ul>
+
+    <h2>Installation de containerd et Kubernetes</h2>
+    <pre><code># Sur toutes les machines
+sudo apt-get update
+sudo apt-get install -y containerd
+
+# Configurer containerd
+sudo mkdir -p /etc/containerd
+containerd config default | sudo tee /etc/containerd/config.toml
+sudo systemctl restart containerd
+
+# Désactiver le swap
+sudo swapoff -a
+sudo sed -i '/ swap / s/^/#/' /etc/fstab
+
+# Installer kubeadm, kubelet, kubectl
+sudo apt-get install -y apt-transport-https ca-certificates curl
+curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl</code></pre>
+
+    <h2>Initialisation du cluster (sur le master)</h2>
+    <pre><code>sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+
+# Configurer kubectl pour l'utilisateur courant
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+# Installer Flannel (CNI)
+kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml</code></pre>
+
+    <h2>Ajouter des workers au cluster</h2>
+    <p>Sur le master, récupérez la commande d'join :</p>
+    <pre><code>kubeadm token create --print-join-command</code></pre>
+    <p>Exécutez cette commande sur chaque machine worker.</p>
+
+    <h2>Vérification du cluster</h2>
+    <pre><code>kubectl get nodes
+kubectl get pods --all-namespaces</code></pre>
+
+    <h2>Déploiement d'une première application test</h2>
+    <pre><code>kubectl create deployment nginx --image=nginx
+kubectl expose deployment nginx --port=80 --type=NodePort
+kubectl get svc</code></pre>
+
+    <p>Félicitations ! Vous avez maintenant un cluster Kubernetes fonctionnel. La prochaine étape sera d'ajouter un stockage persistant et un ingress controller.</p>
+
+    <h2>Prochaines étapes recommandées</h2>
+    <ul style="margin-left: 2rem;">
+      <li>Installer un Ingress Controller (NGINX ou Traefik)</li>
+      <li>Mettre en place cert-manager pour les certificats SSL</li>
+      <li>Configurer Prometheus + Grafana pour le monitoring</li>
+      <li>Utiliser Helm pour gérer les déploiements</li>
+    </ul>
+  </div>
+  <a href="../index.html#blog" class="back-to-blog">← Retour au blog</a>
+</article>
+
+<footer>
+  <span>© 2026 Harivelo Andrianantoandro — DevOps Engineer</span>
+</footer>
+
+<script>
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    document.getElementById('btn-light').classList.toggle('active', t === 'light');
+    document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+    localStorage.setItem('theme', t);
+  }
+
+  const saved = localStorage.getItem('theme');
+  if (saved) setTheme(saved);
+</script>
+</body>
+</html>

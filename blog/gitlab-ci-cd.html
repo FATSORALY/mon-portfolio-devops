@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CI/CD avec GitLab CI : De zéro à la production - Harivelo DevOps Blog</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  [data-theme="light"] {
+    --bg: #f8f7f4;
+    --bg2: #ffffff;
+    --bg3: #f0ede8;
+    --text: #1a1916;
+    --muted: #6b6760;
+    --accent: #2563eb;
+    --accent2: #0ea5e9;
+    --green: #16a34a;
+    --border: #e5e2dc;
+    --border2: #ccc9c2;
+    --shadow: rgba(0,0,0,0.06);
+    --tag-bg: #eff6ff;
+    --tag-txt: #1d4ed8;
+  }
+  [data-theme="dark"] {
+    --bg: #13131a;
+    --bg2: #1c1c26;
+    --bg3: #242430;
+    --text: #eeeef2;
+    --muted: #8888a0;
+    --accent: #60a5fa;
+    --accent2: #38bdf8;
+    --green: #4ade80;
+    --border: #2a2a38;
+    --border2: #3a3a50;
+    --shadow: rgba(0,0,0,0.3);
+    --tag-bg: #1e3a5f;
+    --tag-txt: #93c5fd;
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  nav {
+    position: fixed;
+    top:0; left:0; right:0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 5vw;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 1.75rem; list-style: none; }
+  .nav-links a { font-size:14px; font-weight:500; color:var(--muted); text-decoration:none; }
+  .nav-links a:hover { color:var(--text); }
+  .nav-right { display:flex; align-items:center; gap:2rem; }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 3px;
+    cursor: pointer;
+  }
+  .toggle-btn {
+    width:28px; height:28px;
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+    border:none; background:transparent;
+    color:var(--muted);
+    cursor: pointer;
+  }
+  .toggle-btn.active {
+    background: var(--bg2);
+    color: var(--text);
+  }
+
+  .blog-article {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 8rem 5vw 5rem;
+  }
+  .article-header {
+    margin-bottom: 3rem;
+  }
+  .article-category {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .article-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  .article-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+  .article-content {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--text);
+  }
+  .article-content h2 {
+    font-size: 1.8rem;
+    font-family: 'Instrument Serif', serif;
+    margin: 2rem 0 1rem;
+  }
+  .article-content h3 {
+    font-size: 1.3rem;
+    margin: 1.5rem 0 0.75rem;
+  }
+  .article-content pre {
+    background: var(--bg3);
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+  }
+  .article-content code {
+    background: var(--bg3);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9em;
+  }
+  .article-content p {
+    margin-bottom: 1.25rem;
+  }
+  .article-content ul, .article-content ol {
+    margin-left: 2rem;
+    margin-bottom: 1.25rem;
+  }
+  .back-to-blog {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 3rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  .back-to-blog:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    gap: 12px;
+  }
+  footer {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 5vw;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><a href="../index.html" style="text-decoration:none; color:inherit;">harivelo<span>.dev</span></a></div>
+  <div class="nav-right">
+    <ul class="nav-links">
+      <li><a href="../index.html#stack">Stack</a></li>
+      <li><a href="../index.html#projets">Projets</a></li>
+      <li><a href="../index.html#cv">Parcours</a></li>
+      <li><a href="../index.html#blog">Blog</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+    </ul>
+    <div class="theme-toggle">
+      <button class="toggle-btn active" id="btn-light" onclick="setTheme('light')">☀️</button>
+      <button class="toggle-btn" id="btn-dark" onclick="setTheme('dark')">🌙</button>
+    </div>
+  </div>
+</nav>
+
+<article class="blog-article">
+  <div class="article-header">
+    <div class="article-category">🦊 CI/CD · GITLAB</div>
+    <h1 class="article-title">CI/CD avec GitLab CI : de zéro à la production</h1>
+    <div class="article-meta">📅 5 Janvier 2026 • ⏱️ 12 min de lecture</div>
+  </div>
+  <div class="article-content">
+    <p>GitLab CI est l'un des outils d'intégration continue les plus puissants et les plus simples à prendre en main. Dans cet article, nous allons construire une pipeline CI/CD complète pour une application Node.js, du commit jusqu'au déploiement sur un serveur de production.</p>
+
+    <h2>Les bases de GitLab CI</h2>
+    <p>GitLab CI utilise un fichier <code>.gitlab-ci.yml</code> à la racine de votre projet. Ce fichier définit :</p>
+    <ul>
+      <li><strong>Stages</strong> : les étapes de la pipeline (build, test, deploy)</li>
+      <li><strong>Jobs</strong> : les tâches exécutées dans chaque stage</li>
+      <li><strong>Runners</strong> : les agents qui exécutent les jobs</li>
+    </ul>
+
+    <h2>Structure d'une pipeline classique</h2>
+    <pre><code>stages:
+  - build
+  - test
+  - package
+  - deploy
+
+variables:
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+
+before_script:
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY</code></pre>
+
+    <h2>Étape 1 : Build de l'application</h2>
+    <pre><code>build:
+  stage: build
+  image: node:18-alpine
+  script:
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour</code></pre>
+
+    <h2>Étape 2 : Tests unitaires et linting</h2>
+    <pre><code>test:
+  stage: test
+  image: node:18-alpine
+  script:
+    - npm install
+    - npm run lint
+    - npm run test:unit
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'</code></pre>
+
+    <h2>Étape 3 : Construction de l'image Docker</h2>
+    <pre><code>package:
+  stage: package
+  image: docker:24
+  services:
+    - docker:dind
+  script:
+    - docker build -t $DOCKER_IMAGE .
+    - docker push $DOCKER_IMAGE
+  only:
+    - main
+    - develop</code></pre>
+
+    <h2>Étape 4 : Déploiement sur plusieurs environnements</h2>
+    <pre><code>deploy_staging:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - apk add --no-cache openssh-client
+    - ssh -o StrictHostKeyChecking=no $STAGING_USER@$STAGING_HOST "docker pull $DOCKER_IMAGE && docker-compose up -d"
+  environment:
+    name: staging
+    url: https://staging.monapp.com
+  only:
+    - develop
+
+deploy_production:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - apk add --no-cache openssh-client
+    - ssh -o StrictHostKeyChecking=no $PROD_USER@$PROD_HOST "docker pull $DOCKER_IMAGE && docker-compose up -d"
+  environment:
+    name: production
+    url: https://monapp.com
+  only:
+    - main
+  when: manual  # Approbation manuelle pour la prod</code></pre>
+
+    <h2>Pipeline complète avec tests d'intégration</h2>
+    <pre><code>stages:
+  - build
+  - test
+  - security
+  - package
+  - integration
+  - deploy
+
+variables:
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  SONAR_TOKEN: $SONAR_TOKEN
+
+cache:
+  paths:
+    - node_modules/
+
+build:
+  stage: build
+  image: node:18-alpine
+  script:
+    - npm ci --cache .npm --prefer-offline
+    - npm run build
+  cache:
+    paths:
+      - node_modules/
+  artifacts:
+    paths:
+      - dist/
+
+test:
+  stage: test
+  image: node:18-alpine
+  script:
+    - npm run test:unit
+    - npm run test:integration
+
+security:
+  stage: security
+  image: sonarsource/sonar-scanner-cli
+  script:
+    - sonar-scanner -Dsonar.projectKey=$CI_PROJECT_NAME -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
+
+package:
+  stage: package
+  image: docker:24
+  services:
+    - docker:dind
+  script:
+    - docker build --build-arg VERSION=$CI_COMMIT_SHORT_SHA -t $DOCKER_IMAGE .
+    - docker push $DOCKER_IMAGE
+
+integration:
+  stage: integration
+  image: docker:24
+  services:
+    - docker:dind
+  script:
+    - docker run -d -p 3000:3000 --name test-app $DOCKER_IMAGE
+    - sleep 10
+    - curl --fail http://localhost:3000/health
+  after_script:
+    - docker rm -f test-app
+
+deploy_staging:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - apk add --no-cache openssh-client
+    - ssh $STAGING_USER@$STAGING_HOST "docker pull $DOCKER_IMAGE && docker-compose up -d"
+  environment: staging
+  only:
+    - develop
+
+deploy_production:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - apk add --no-cache openssh-client
+    - ssh $PROD_USER@$PROD_HOST "docker pull $DOCKER_IMAGE && docker-compose up -d"
+  environment: production
+  only:
+    - main
+  when: manual</code></pre>
+
+    <h2>Utilisation des variables d'environnement</h2>
+    <p>Dans GitLab UI : Settings → CI/CD → Variables</p>
+    <pre><code># Variables à configurer :
+STAGING_HOST    # IP du serveur de staging
+STAGING_USER    # utilisateur SSH
+PROD_HOST       # IP du serveur de production  
+PROD_USER       # utilisateur SSH
+SONAR_TOKEN     # Token SonarQube
+CI_REGISTRY     # URL du registry Docker
+CI_REGISTRY_USER
+CI_REGISTRY_PASSWORD</code></pre>
+
+    <h2>Dockerfile pour l'application</h2>
+    <pre><code># Build stage
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+
+# Production stage
+FROM node:18-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY package*.json ./
+EXPOSE 3000
+CMD ["node", "dist/index.js"]</code></pre>
+
+    <h2>Bonnes pratiques GitLab CI</h2>
+    <ul>
+      <li>✅ Utiliser des <strong>caches</strong> pour accélérer les pipelines</li>
+      <li>✅ Séparer les stages logiquement (build → test → deploy)</li>
+      <li>✅ Utiliser <strong>needs</strong> pour exécuter des jobs en parallèle</li>
+      <li>✅ Activer les <strong>tests de sécurité</strong> (SAST, DAST)</li>
+      <li>✅ Stocker les secrets dans les <strong>variables protégées</strong></li>
+      <li>✅ Utiliser <strong>rules</strong> au lieu de only/except (plus flexibles)</li>
+    </ul>
+
+    <h2>Exemple avec needs (parallélisation)</h2>
+    <pre><code>stages:
+  - build
+  - test
+  - deploy
+
+build:
+  stage: build
+
+test:unit:
+  stage: test
+  needs: ["build"]
+
+test:integration:
+  stage: test
+  needs: ["build"]
+
+deploy:
+  stage: deploy
+  needs: ["test:unit", "test:integration"]</code></pre>
+
+    <p>Vous avez maintenant toutes les bases pour mettre en place une pipeline CI/CD professionnelle avec GitLab CI. Commencez simple, puis ajoutez progressivement des étapes de sécurité, de monitoring et de tests avancés !</p>
+  </div>
+  <a href="../index.html#blog" class="back-to-blog">← Retour au blog</a>
+</article>
+
+<footer>
+  <span>© 2026 Harivelo Andrianantoandro — DevOps Engineer</span>
+</footer>
+
+<script>
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    document.getElementById('btn-light').classList.toggle('active', t === 'light');
+    document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+    localStorage.setItem('theme', t);
+  }
+
+  const saved = localStorage.getItem('theme');
+  if (saved) setTheme(saved);
+</script>
+</body>
+</html>

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docker vs VM : Ce que j'ai appris en pratique - Harivelo DevOps Blog</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  [data-theme="light"] {
+    --bg: #f8f7f4;
+    --bg2: #ffffff;
+    --bg3: #f0ede8;
+    --text: #1a1916;
+    --muted: #6b6760;
+    --accent: #2563eb;
+    --accent2: #0ea5e9;
+    --green: #16a34a;
+    --border: #e5e2dc;
+    --border2: #ccc9c2;
+    --shadow: rgba(0,0,0,0.06);
+    --tag-bg: #eff6ff;
+    --tag-txt: #1d4ed8;
+  }
+  [data-theme="dark"] {
+    --bg: #13131a;
+    --bg2: #1c1c26;
+    --bg3: #242430;
+    --text: #eeeef2;
+    --muted: #8888a0;
+    --accent: #60a5fa;
+    --accent2: #38bdf8;
+    --green: #4ade80;
+    --border: #2a2a38;
+    --border2: #3a3a50;
+    --shadow: rgba(0,0,0,0.3);
+    --tag-bg: #1e3a5f;
+    --tag-txt: #93c5fd;
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  nav {
+    position: fixed;
+    top:0; left:0; right:0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 5vw;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 1.75rem; list-style: none; }
+  .nav-links a { font-size:14px; font-weight:500; color:var(--muted); text-decoration:none; }
+  .nav-links a:hover { color:var(--text); }
+  .nav-right { display:flex; align-items:center; gap:2rem; }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 3px;
+    cursor: pointer;
+  }
+  .toggle-btn {
+    width:28px; height:28px;
+    border-radius: 50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+    border:none; background:transparent;
+    color:var(--muted);
+    cursor: pointer;
+  }
+  .toggle-btn.active {
+    background: var(--bg2);
+    color: var(--text);
+  }
+
+  .blog-article {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 8rem 5vw 5rem;
+  }
+  .article-header {
+    margin-bottom: 3rem;
+  }
+  .article-category {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .article-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  .article-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+  .article-content {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--text);
+  }
+  .article-content h2 {
+    font-size: 1.8rem;
+    font-family: 'Instrument Serif', serif;
+    margin: 2rem 0 1rem;
+  }
+  .article-content h3 {
+    font-size: 1.3rem;
+    margin: 1.5rem 0 0.75rem;
+  }
+  .article-content pre {
+    background: var(--bg3);
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+  }
+  .article-content code {
+    background: var(--bg3);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9em;
+  }
+  .article-content p {
+    margin-bottom: 1.25rem;
+  }
+  .article-content ul, .article-content ol {
+    margin-left: 2rem;
+    margin-bottom: 1.25rem;
+  }
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+  }
+  .comparison-table th, .comparison-table td {
+    border: 1px solid var(--border);
+    padding: 12px;
+    text-align: left;
+  }
+  .comparison-table th {
+    background: var(--bg3);
+    font-weight: 600;
+  }
+  .back-to-blog {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 3rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  .back-to-blog:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    gap: 12px;
+  }
+  footer {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 5vw;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><a href="../index.html" style="text-decoration:none; color:inherit;">harivelo<span>.dev</span></a></div>
+  <div class="nav-right">
+    <ul class="nav-links">
+      <li><a href="../index.html#stack">Stack</a></li>
+      <li><a href="../index.html#projets">Projets</a></li>
+      <li><a href="../index.html#cv">Parcours</a></li>
+      <li><a href="../index.html#blog">Blog</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+    </ul>
+    <div class="theme-toggle">
+      <button class="toggle-btn active" id="btn-light" onclick="setTheme('light')">☀️</button>
+      <button class="toggle-btn" id="btn-dark" onclick="setTheme('dark')">🌙</button>
+    </div>
+  </div>
+</nav>
+
+<article class="blog-article">
+  <div class="article-header">
+    <div class="article-category">🐳 DOCKER · VIRTUALISATION</div>
+    <h1 class="article-title">Docker vs VM : ce que j'ai appris en pratique</h1>
+    <div class="article-meta">📅 15 Décembre 2025 • ⏱️ 9 min de lecture</div>
+  </div>
+  <div class="article-content">
+    <p>Quand j'ai commencé dans le DevOps, je me suis posé la question : Docker ou machine virtuelle ? Aujourd'hui, après plusieurs projets en production, je partage mon expérience sur les différences concrètes, les cas d'usage et comment choisir.</p>
+
+    <h2>La différence fondamentale</h2>
+    <p>La principale différence réside dans <strong>l'architecture</strong> :</p>
+    <ul>
+      <li><strong>VM</strong> : Virtualisation complète du matériel → chaque VM a son propre OS</li>
+      <li><strong>Docker</strong> : Virtualisation au niveau OS → partage le noyau de l'hôte</li>
+    </ul>
+
+    <h2>Tableau comparatif détaillé</h2>
+    <table class="comparison-table">
+      <thead>
+        <tr><th>Caractéristique</th><th>Machine Virtuelle</th><th>Docker</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Démarrage</td><td>Minutes</td><td>Secondes</td></tr>
+        <tr><td>Taille</td><td>Plusieurs GB</td><td>Quelques MB</td></tr>
+        <tr><td>Performance</td><td>Légère surcharge (hyperviseur)</td><td>Presque natif</td></tr>
+        <tr><td>Isolation</td><td>Très forte (noyau séparé)</td><td>Moyenne (partage du noyau)</td></tr>
+        <tr><td>Compatibilité OS</td><td>Windows, Linux, macOS sur même hôte</td><td>Même noyau que l'hôte (Linux)</td></tr>
+        <tr><td>Utilisation RAM</td><td>Réservée statiquement</td><td>Partagée dynamiquement</td></tr>
+        <tr><td>Portabilité</td><td>OVF, VMDK</td><td>Image Docker, Docker Hub</td></tr>
+        <tr><td>Scalabilité</td><td>Limitée (temps de création)</td><td>Excellent (Kubernetes)</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Ce que j'ai mesuré en pratique</h2>
+    <p>Tests réalisés sur mon poste de développement (16GB RAM, 8 cores) :</p>
+    <ul>
+      <li><strong>Démarrage</strong> : VM Ubuntu → 45s / Conteneur Nginx → 0.8s</li>
+      <li><strong>Consommation mémoire</strong> : VM (1GB alloués) / Conteneur (18MB)</li>
+      <li><strong>Stockage</strong> : VM 4GB / Image Docker 80MB</li>
+      <li><strong>Déploiement</strong> : 10 VM en 5 min / 50 conteneurs en 30s</li>
+    </ul>
+
+    <h2>Avantages concrets de Docker</h2>
+    <h3>1. Rapidité de développement</h3>
+    <pre><code># Avec Docker
+docker run -p 3000:3000 -v $(pwd):/app node:18 npm run dev
+
+# Environnement identique en dev, staging, prod</code></pre>
+
+    <h3>2. Reproductibilité parfaite</h3>
+    <pre><code># Dockerfile qui garantit l'environnement exact
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["python", "app.py"]</code></pre>
+
+    <h3>3. CI/CD simplifié</h3>
+    <pre><code># Une seule commande pour déployer
+docker build -t monapp .
+docker push monapp
+# Sur le serveur
+docker pull monapp && docker run monapp</code></pre>
+
+    <h2>Quand utiliser des VMs ?</h2>
+    <ul>
+      <li>✅ <strong>Isolation stricte</strong> : sécurité maximale, clients multi-tenant</li>
+      <li>✅ <strong>OS différents</strong> : besoin d'exécuter Windows ET Linux sur le même hyperviseur</li>
+      <li>✅ <strong>Environnements legacy</strong> : anciennes applications avec dépendances système complexes</li>
+      <li>✅ <strong>Kernel spécifique</strong> : besoin de modules noyau personnalisés</li>
+    </ul>
+
+    <h2>Quand privilégier Docker ?</h2>
+    <ul>
+      <li>✅ <strong>Microservices</strong> : décomposer l'application en petits services</li>
+      <li>✅ <strong>CI/CD pipelines</strong> : exécution de jobs isolés et rapides</li>
+      <li>✅ <strong>Dev vs Prod</strong> : environnement identique partout</li>
+      <li>✅ <strong>Scalabilité horizontale</strong> : Kubernetes, Docker Swarm</li>
+      <li>✅ <strong>Resource efficiency</strong> : optimiser le coût cloud</li>
+    </ul>
+
+    <h2>Cas hybride : Docker dans une VM (meilleur des deux mondes)</h2>
+    <p>En production cloud, la pratique courante :</p>
+    <pre><code># Infrastructure typique
+Bare Metal / Cloud
+  └── VM (avec Docker installé)
+        ├── Conteneur App 1
+        ├── Conteneur App 2
+        └── Conteneur Base de données</code></pre>
+    <p><strong>Avantages :</strong> isolation de la VM + légèreté et orchestration de Docker</p>
+
+    <h2>Exemple pratique : Déployer une app avec Docker</h2>
+    <pre><code># docker-compose.yml pour une stack complète
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+
+volumes:
+  pgdata:</code></pre>
+
+    <h2>Ma conclusion après 1 an d'expérience</h2>
+    <ul>
+      <li><strong>Pour le développement</strong> : Docker obligatoire (gain de temps énorme)</li>
+      <li><strong>Pour la production</strong> : Docker + orchestration (K8s) pour la majorité des cas</li>
+      <li><strong>Pour la sécurité stricte</strong> : VM ou combinaison VM + Docker</li>
+    </ul>
+    <p><strong>Règle d'or :</strong> Commencez avec Docker, passez aux VMs uniquement si vous avez des contraintes spécifiques (sécurité, noyau, OS).</p>
+
+    <h2>Les pièges à éviter avec Docker</h2>
+    <ul>
+      <li>⚠️ Ne pas stocker de données dans les conteneurs (utiliser des volumes)</li>
+      <li>⚠️ Éviter les images trop grosses (préférer Alpine, slim)</li>
+      <li>⚠️ Ne pas exécuter les conteneurs en root</li>
+      <li>⚠️ Gérer les logs (ne pas laisser les conteneurs écrire trop de logs)</li>
+    </ul>
+  </div>
+  <a href="../index.html#blog" class="back-to-blog">← Retour au blog</a>
+</article>
+
+<footer>
+  <span>© 2026 Harivelo Andrianantoandro — DevOps Engineer</span>
+</footer>
+
+<script>
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    document.getElementById('btn-light').classList.toggle('active', t === 'light');
+    document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
+    localStorage.setItem('theme', t);
+  }
+
+  const saved = localStorage.getItem('theme');
+  if (saved) setTheme(saved);
+</script>
+</body>
+</html>
